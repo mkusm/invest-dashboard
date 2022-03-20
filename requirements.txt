@@ -1,0 +1,9 @@
+altair==4.2.0
+english-words==1.1.0
+matplotlib==3.5.1
+pandas==1.4.1
+plotly-express==0.4.1
+psycopg2-binary==2.9.3
+streamlit==1.7.0
+streamlit-cookies-manager==0.2.0
+yfinance==0.1.70
