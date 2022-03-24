@@ -88,6 +88,7 @@ def handle_purchase_form(
 
 
 if __name__ == '__main__':
+
     ## COOKIES ##
 
     cookies = EncryptedCookieManager(
@@ -106,6 +107,25 @@ if __name__ == '__main__':
         passphrase = ' '.join(passphrase)
         cookies['passphrase'] = passphrase
         cookies.save()
+
+
+    ## FOOTER AND MAIN MENU ##
+
+    hide_streamlit_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden; }
+        footer:before {
+            content: "text" / url("http://google.com/");
+            visibility: visible;
+            display: block;
+            position: relative;
+            padding: 5px;
+        }
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
     ## SIDEBAR ##
 
@@ -172,6 +192,7 @@ if __name__ == '__main__':
         if submit_passphrase:
             cookies['passphrase'] = user_passphrase
             st.experimental_rerun()
+
 
     ## DASHBOARD ##
 

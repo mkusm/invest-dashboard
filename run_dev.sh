@@ -1,1 +1,1 @@
-ENV=DEV pipenv run streamlit run streamlit_app.py
+ENV=DEV pipenv run streamlit run code/streamlit_app.py
