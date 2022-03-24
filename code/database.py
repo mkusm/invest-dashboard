@@ -6,6 +6,8 @@ import pandas as pd
 import psycopg2
 import yfinance as yf
 
+from data_utils import reset_purchase_df_index
+
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
@@ -189,9 +191,3 @@ def delete_user_purchase_data(passphrase, id_):
     conn.commit()
     cur.close()
     conn.close()
-
-
-def reset_purchase_df_index(df):
-    df = df.copy().reset_index(drop=True)
-    df.index += 1
-    return df

@@ -109,24 +109,6 @@ if __name__ == '__main__':
         cookies.save()
 
 
-    ## FOOTER AND MAIN MENU ##
-
-    hide_streamlit_style = """
-        <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden; }
-        footer:before {
-            content: "text" / url("http://google.com/");
-            visibility: visible;
-            display: block;
-            position: relative;
-            padding: 5px;
-        }
-        </style>
-    """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-
     ## SIDEBAR ##
 
     with st.sidebar.form('purchase-form'):
@@ -205,6 +187,21 @@ if __name__ == '__main__':
             purchase_df = st.session_state['random_purchase_data']
         st.info('Data below is randomly generated. Add your own data in the sidebar.')
     ticker_info_df = db.create_ticker_df_with_currency_and_type(purchase_df.ticker.unique())
+
+    hide_streamlit_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden; }
+        footer:before {
+            content: 'source available at github.com/mkusm/invest-dashboard';
+            visibility: visible;
+            display: block;
+            position: relative;
+        }
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
     with st.spinner('Downloading historical stock splits...'):
         purchase_df = purchase_df.pipe(data_utils.correct_asset_amount_affected_by_split, ticker_info_df.type)
     assets_df = data_utils.calculate_current_assets_from_purchases_and_sales(purchase_df, ticker_info_df)

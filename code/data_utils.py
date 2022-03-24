@@ -77,6 +77,7 @@ def calculate_current_assets_from_purchases_and_sales(purchase_df, ticker_info_d
         .assign(type=lambda x: x.type.str.replace('CRYPTOCURRENCY', 'CRYPTO'))
     )
 
+
 def add_latest_asset_prices(df, historical_prices):
     latest_prices = historical_prices.ffill().iloc[-1]
     latest_currency_prices_in_usd = (
@@ -95,6 +96,7 @@ def add_latest_asset_prices(df, historical_prices):
         .sort_values(['type', 'total_pln'], ascending=False)
         .round(2)
     )
+
 
 def calculate_historical_value_in_pln(historical_prices, purchase_df, assets_df, months_n=None, frequency='D'):
     if months_n:
@@ -124,3 +126,9 @@ def calculate_historical_value_in_pln(historical_prices, purchase_df, assets_df,
         )
         .loc[:, assets_df.sort_values(['total_pln']).index]
     )
+
+
+def reset_purchase_df_index(df):
+    df = df.copy().reset_index(drop=True)
+    df.index += 1
+    return df
