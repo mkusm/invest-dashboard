@@ -88,6 +88,9 @@ def handle_purchase_form(
 
 
 if __name__ == '__main__':
+    st.set_page_config(
+         page_title="Invest Dashboard",
+    )
 
     ## COOKIES ##
 
