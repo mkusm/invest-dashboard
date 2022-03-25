@@ -107,7 +107,7 @@ def add_ticker_to_db(ticker, currency, type_):
         df.to_csv('dev_data.csv')
         return
 
-    conn = psycopg2.connect(database_url, sslmode='require')
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cur = conn.cursor()
     cur.execute(
         """
