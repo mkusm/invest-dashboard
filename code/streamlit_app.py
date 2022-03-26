@@ -34,6 +34,9 @@ def handle_purchase_form(
         elif ticker_info['quoteType'] == 'CURRENCY':
             purchase_form_error.error(f'ticker "{user_ticker}" is a currency')
             return
+        elif ticker_info['quoteType'] == 'MUTUALFUND':
+            purchase_form_error.error(f'Mutual funds are not supported')
+            return
         else:
             db.add_ticker_to_db(user_ticker, ticker_info['currency'], ticker_info['quoteType'])
 
