@@ -38,7 +38,7 @@ def handle_purchase_form(
             purchase_form_error.error(f'Mutual funds are not supported')
             return
         else:
-            db.add_ticker_to_db(user_ticker, ticker_info['currency'], ticker_info['quoteType'])
+            db.add_ticker_to_db(user_ticker, ticker_info['currency'].upper(), ticker_info['quoteType'])
 
     # validate date
     if pd.Timestamp(user_date) > pd.Timestamp.now():
