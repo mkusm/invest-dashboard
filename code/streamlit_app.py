@@ -38,7 +38,12 @@ def handle_purchase_form(
             purchase_form_error.error(f'Mutual funds are not supported')
             return
         else:
-            db.add_ticker_to_db(user_ticker, ticker_info['currency'].upper(), ticker_info['quoteType'])
+            if ticker_info['currency'] == 'GBp':
+                ticker_info['currency'] = 'GBX'
+            if not ticker_info['currency'] == ticker_info['currency'].upper():
+                purchase_form_error.error(f'Unexpected currency {ticker_info["currency"]} in Yahoo API')
+                return
+            db.add_ticker_to_db(user_ticker, ticker_info['currency'], ticker_info['quoteType'])
 
     # validate date
     if pd.Timestamp(user_date) > pd.Timestamp.now():
@@ -218,16 +223,18 @@ if __name__ == '__main__':
             pd.Series(assets_df.currency.unique()) + 'USD=X',
             pd.Series(['PLNUSD=X'])
         ]
-    ).reset_index(drop=True).sort_values()
+    ).reset_index(drop=True).sort_values().to_list()
+
     five_min_unique_date = pd.Timestamp.now().replace(minute=pd.Timestamp.now().minute // 5, second=0, microsecond=0)
     with st.spinner('Downloading historical asset prices...'):
         historical_prices = data_utils.get_historical_prices(
-            assets_names_with_currencies.to_list(),
+            assets_names_with_currencies,
             start=earliest_date,
             # cache_date makes sure historical data isn't redownloaded more than once every five minutes
             cache_date=five_min_unique_date,
         )
-    if set(historical_prices.columns) != set(assets_names_with_currencies.to_list()):
+
+    if set(historical_prices.columns) != set(assets_names_with_currencies):
         # rare streamlit cache bug
         st.experimental_rerun()
     assets_df = assets_df.pipe(data_utils.add_latest_asset_prices, historical_prices)

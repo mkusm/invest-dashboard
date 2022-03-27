@@ -10,6 +10,27 @@ def get_asset_splits(ticker, cache_date):
 
 @st.experimental_memo(max_entries=50, show_spinner=False)
 def get_historical_prices(tickers, start, cache_date):
+    assert len(tickers) == len(set(tickers))
+
+    # fix for penny sterling edgecase
+    if 'GBXUSD=X' in tickers:
+        index = tickers.index('GBXUSD=X')
+        if 'GBPUSD=X' not in tickers:
+            tickers[index] = 'GBPUSD=X'
+            return (
+                yf.download(tickers, start=start)
+                .loc[:, 'Close']
+                .assign(**{'GBXUSD=X': lambda x: x['GBPUSD=X'] / 100})
+                .drop(columns='GBPUSD=X')
+            )
+        else:
+            del tickers[index]
+            return (
+                yf.download(tickers, start=start)
+                .loc[:, 'Close']
+                .assign(**{'GBXUSD=X': lambda x: x['GBPUSD=X'] / 100})
+            )
+
     return yf.download(tickers, start=start).loc[:, 'Close']
 
 
@@ -113,6 +134,7 @@ def calculate_historical_value_in_pln(historical_prices, purchase_df, assets_df,
         .rename(columns=lambda x: x.split('USD=X')[0])
         .assign(USD=1)
     )
+
     return (
         historical_prices
         .loc[:, lambda x: ~x.columns.str.endswith('USD=X')]
