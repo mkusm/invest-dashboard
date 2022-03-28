@@ -96,9 +96,10 @@ def handle_purchase_form(
 
 
 if __name__ == '__main__':
-    st.set_page_config(
-         page_title="Invest Dashboard",
-    )
+
+    ## TITLE ##
+
+    st.set_page_config(page_title="Invest Dashboard")
 
     ## COOKIES ##
 
@@ -107,7 +108,7 @@ if __name__ == '__main__':
         password=os.environ.get("COOKIES_PASSWORD", "dev_env_password"),
     )
     if not cookies.ready():
-        # Wait for the component to load and send us current cookies.
+        # Wait for the component to load and retreive current cookies.
         st.stop()
 
     user_passphrase = cookies.get('passphrase')
@@ -118,7 +119,6 @@ if __name__ == '__main__':
         passphrase = ' '.join(passphrase)
         cookies['passphrase'] = passphrase
         cookies.save()
-
 
     ## SIDEBAR ##
 
@@ -185,7 +185,6 @@ if __name__ == '__main__':
         if submit_passphrase:
             cookies['passphrase'] = user_passphrase
             st.experimental_rerun()
-
 
     ## DASHBOARD ##
 
@@ -260,8 +259,16 @@ if __name__ == '__main__':
     # radio and slider widgets
     frequency = st.radio("Historical net worth aggregation", ("Day","Week","Month"))
     frequency = {'Day': 'D', 'Week': 'W', 'Month': 'M'}[frequency]
-    max_value = (pd.Timestamp.now().to_period('M') - pd.Timestamp(earliest_date).to_period('M')).n + 2
-    months_n = st.slider('Historical net worth last n months', min_value=1, max_value=max_value, value=max_value)
+    max_value = (pd.Timestamp.now().to_period('M') - pd.Timestamp(earliest_date).to_period('M')).n + 1
+    if max_value == 1:
+        months_n = 1
+    else:
+        months_n = st.slider(
+            'Historical net worth last n months',
+            min_value=1,
+            max_value=max_value,
+            value=max_value if max_value < 6 else max_value//2,
+        )
 
     # plot historical area plot using above widgets
     historical_value_in_pln = data_utils.calculate_historical_value_in_pln(
