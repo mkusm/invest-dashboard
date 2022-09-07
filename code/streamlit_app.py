@@ -174,7 +174,7 @@ if __name__ == '__main__':
             purchase_df = db.get_user_purchase_data_from_db(cookies['passphrase'])
             st.experimental_rerun()
 
-    user_purchase_table.write(purchase_df.drop(columns=['id']), height=2000, width=2000)
+    user_purchase_table.write(purchase_df.drop(columns=['id']))
 
     with st.sidebar.expander('user passphrase identifier'):
         with st.form('passphrase-form'):
@@ -222,7 +222,7 @@ if __name__ == '__main__':
             pd.Series(assets_df.currency.unique()) + 'USD=X',
             pd.Series(['PLNUSD=X'])
         ]
-    ).reset_index(drop=True).sort_values().to_list()
+    ).reset_index(drop=True).sort_values().drop_duplicates().to_list()
 
     five_min_unique_date = pd.Timestamp.now().replace(minute=pd.Timestamp.now().minute // 5, second=0, microsecond=0)
     with st.spinner('Downloading historical asset prices...'):
@@ -247,7 +247,6 @@ if __name__ == '__main__':
     with st.expander('Current assets table (click to show/hide)'):
         st.dataframe(
             assets_df.drop(columns=['currency_rate']).query('amount != 0').style.format(precision=2),
-            height=1000
         )
 
     # plot pie plots
