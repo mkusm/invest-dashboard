@@ -10,6 +10,6 @@ COPY ./code .
 COPY ./dev_data.csv .
 
 
-EXPOSE 8501
+EXPOSE 8080
 
-ENTRYPOINT ["streamlit", "run", "streamlit_app.py"]
+ENTRYPOINT ["streamlit", "run", "streamlit_app.py", "--server.port=8080", "--server.address=0.0.0.0"]
