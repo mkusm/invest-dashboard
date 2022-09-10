@@ -11,7 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN find /usr/local/lib/python3.10/site-packages/streamlit -type f \( -iname \*.py -o -iname \*.js \) -print0 | xargs -0 sed -i 's/healthz/health-check/g'
 
 COPY ./code .
-COPY ./dev_data.csv .
 
 EXPOSE 8080
 

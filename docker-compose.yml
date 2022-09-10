@@ -1,0 +1,21 @@
+services:
+  firestore_emulator:
+    image: mtlynch/firestore-emulator
+    container_name: stonks-firestore-emulator-container
+    environment:
+      - FIRESTORE_PROJECT_ID=dummy-project-id
+      - PORT=8200
+    ports:
+      - 8200:8200
+  app:
+    image: stonks-image
+    container_name: stonks-app-container
+    environment:
+      - FIRESTORE_EMULATOR_HOST=firestore_emulator:8200
+      - FIRESTORE_PROJECT_ID=dummy-project-id
+    ports:
+      - 8080:8080
+    depends_on:
+      - firestore_emulator
+    stdin_open: true
+    tty: true

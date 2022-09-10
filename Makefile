@@ -1,10 +1,13 @@
-make: build run
+make: build run debug
 
 build:
-	docker build -t stonks-image .
+	docker build -t stonks-image ./stonks-app/
 
 run:
-	docker rm stonks-container; docker run -p 8080:8080 --env-file .env --name stonks-container stonks-image
+	docker compose up -d
+
+debug: 
+	docker attach stonks-app-container
 
 deploy:
-	gcloud run deploy stonks --allow-unauthenticated --region europe-central2 --source .
+	gcloud run deploy stonks --allow-unauthenticated --region europe-central2 --source ./stonks-app/

@@ -6,29 +6,36 @@ import firebase_admin
 import pandas as pd
 import yfinance as yf
 from firebase_admin import firestore
+from google.auth import credentials
 
 from data_utils import reset_purchase_df_index
-
-
-DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 def hash_passphrase(passphrase):
     return hashlib.sha256(passphrase.encode('utf-8')).hexdigest()
 
 
+def initialize_firestore():
+    # don't initialize twice
+    if len(firebase_admin._apps) > 0:
+        return
+    firebase_admin.initialize_app()
+
+
+def get_firestore_client():
+    initialize_firestore()
+    if os.getenv('FIRESTORE_EMULATOR_HOST'):
+        return firestore.Client(
+            project=os.getenv('FIRESTORE_PROJECT_ID'),
+            credentials=credentials.AnonymousCredentials(),
+        )
+    return firestore.client()
+
+
 def generate_random_purchase_data():
     df = pd.DataFrame()
-    if os.getenv('ENV') == 'DEV':
-        df = pd.read_csv('dev_data.csv', index_col='ticker')
-    else:
-        db = get_firestore_client()
-        df = (
-            read_dataframe_from_firestore(db, 'tickers')
-            .rename(columns={'name': 'ticker', 'quotetype': 'type'})
-            .set_index('ticker')
-        )
-
+    db = get_firestore_client()
+    df = read_ticker_df_from_firestore()
 
     def get_random_ticker(type_, df):
         t = (
@@ -57,19 +64,6 @@ def generate_random_purchase_data():
         append_random_crypto(data, df)
 
     return pd.DataFrame(data, columns=['ticker', 'amount', 'date', 'operation'])
-
-
-def initialize_firestore():
-    # don't initialize twice
-    if len(firebase_admin._apps) > 0:
-        return
-    firebase_admin.initialize_app()
-
-
-def get_firestore_client():
-    initialize_firestore()
-    db = firebase_admin.firestore.client()
-    return db
 
 
 def write_dataframe_to_firestore(db: firestore.Client, collection_name: str, df: pd.DataFrame) -> None:
@@ -104,17 +98,32 @@ def is_ticker_in_db(ticker: str) -> bool:
     return not df.empty
 
 
-def create_ticker_df_with_currency_and_type(tickers: list) -> pd.DataFrame:
-    if os.getenv('ENV') == 'DEV':
-        return pd.read_csv('dev_data.csv', index_col='ticker')
-
+def read_ticker_df_from_firestore() -> pd.DataFrame:
     db = get_firestore_client()
-    ticker_df = (
-        read_dataframe_from_firestore(db, 'tickers')
+    df = read_dataframe_from_firestore(db, 'tickers')
+    if df.empty:
+        # dummy data
+        df = pd.DataFrame(
+            data=[
+                {'quotetype': 'EQUITY', 'name': 'AAPL', 'currency': 'USD'},
+                {'quotetype': 'ETF', 'name': 'SPY', 'currency': 'USD'},
+                {'quotetype': 'CRYPTOCURRENCY', 'name': 'BTC-USD', 'currency': 'USD'},
+            ]
+        )
+        write_dataframe_to_firestore(db, 'tickers', df)
+        df = read_dataframe_from_firestore(db, 'tickers')
+    df = (
+        df
         .rename(columns={'name': 'ticker', 'quotetype': 'type'})
         .set_index('ticker')
     )
 
+    return df
+
+
+def create_ticker_df_with_currency_and_type(tickers: list) -> pd.DataFrame:
+    db = get_firestore_client()
+    ticker_df = read_ticker_df_from_firestore()
     for ticker in tickers:
         if ticker not in ticker_df.index:
             info = yf.Ticker(ticker).info
@@ -130,12 +139,6 @@ def create_ticker_df_with_currency_and_type(tickers: list) -> pd.DataFrame:
 
 
 def add_ticker_to_db(ticker: str, currency: str, type_: str):
-    if os.getenv('ENV') == 'DEV':
-        df = pd.read_csv('dev_data.csv', index_col='ticker')
-        df.loc[ticker] = {'currency': currency, 'type': type_}
-        df.to_csv('dev_data.csv')
-        return
-
     db = get_firestore_client()
     data = {
         'name': ticker,
@@ -147,12 +150,6 @@ def add_ticker_to_db(ticker: str, currency: str, type_: str):
 
 def get_user_purchase_data_from_db(passphrase):
     hash_ = hash_passphrase(passphrase)
-    if os.getenv("ENV") == "DEV":
-        try:
-            return pd.read_pickle('user_purchase_data.p').query(f'hash == "{hash_}"').drop(columns='hash')
-        except:
-            return pd.DataFrame([], columns=['id', 'ticker', 'amount', 'date', 'operation'])
-
     db = get_firestore_client()
     df = query_firestore(db, 'purchases', 'hash', '==', hash_)
     if df.empty:
@@ -169,34 +166,28 @@ def get_user_purchase_data_from_db(passphrase):
 
 def add_user_purchase_data_to_db(passphrase, data):
     hash_ = hash_passphrase(passphrase)
-    if os.getenv("ENV") == "DEV":
-        data_copy = data.copy()
-        data_copy['hash'] = hash_
-        df = pd.DataFrame.from_dict(data_copy, orient='index').T.reset_index(drop=True)
-        try:
-            df2 = pd.read_pickle('user_purchase_data.p')
-            df['id'] = df2.loc[:, 'id'].max() + 1
-            df = pd.concat([df2, df])
-        except:
-            pass
-        if df.shape[0] == 1:
-            df['id'] = 1
-        df = df.pipe(reset_purchase_df_index).to_pickle('user_purchase_data.p')
-        return
-
     db = get_firestore_client()
     data['hash'] = hash_
     data['type'] = data.pop('operation')
+
+    purchase_added_last = (
+        db.collection('purchases')
+        .order_by('id', direction=firestore.Query.DESCENDING)
+        .limit(1)
+        .get()
+    )
+
+    if purchase_added_last:
+        new_id = purchase_added_last[0].to_dict()['id'] + 1
+    else:
+        new_id = 1
+    data['id'] = new_id
+
     write_dict_to_firestore(db, 'purchases', data)
 
 
 def delete_user_purchase_data(passphrase, id_):
     hash_ = hash_passphrase(passphrase)
-    if os.getenv("ENV") == "DEV":
-        df = pd.read_pickle('user_purchase_data.p')
-        df.loc[lambda x: x['id'] != id_].to_pickle('user_purchase_data.p')
-        return
-
     db = get_firestore_client()
     docs = db.collection(collection_name).where('hash', '==', hash_).where('id', '==', id_).stream()
     for doc in docs:
