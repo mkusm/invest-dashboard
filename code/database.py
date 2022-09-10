@@ -265,6 +265,7 @@ def add_user_purchase_data_to_db(passphrase, data):
     #conn.close()
     db = get_firestore_client()
     data['hash'] = hash_
+    data['type'] = data.pop('operation')
     write_dict_to_firestore(db, 'purchases', data)
 
 
