@@ -137,7 +137,7 @@ def calculate_historical_value_in_pln(historical_prices, purchase_df, assets_df,
 
     return (
         historical_prices
-        .loc[:, lambda x: ~x.columns.str.endswith('USD=X')]
+        .loc[:, assets_df.index.tolist()]
         .apply(
             lambda x:
             (

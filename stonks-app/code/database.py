@@ -33,8 +33,6 @@ def get_firestore_client():
 
 
 def generate_random_purchase_data():
-    df = pd.DataFrame()
-    db = get_firestore_client()
     df = read_ticker_df_from_firestore()
 
     def get_random_ticker(type_, df):
@@ -55,6 +53,9 @@ def generate_random_purchase_data():
     def append_random_crypto(data, df):
         data.append([get_random_ticker('CRYPTOCURRENCY', df), random.randint(5, 30) / 10, '2020-01-01', 'purchase'])
 
+    def append_random_currency(data, df):
+        data.append([get_random_ticker('CURRENCY', df), random.randint(100000, 200000), '2020-01-01', 'purchase'])
+
     data = []
     for i in range(random.randint(3, 6)):
         append_random_equity(data, df)
@@ -62,6 +63,8 @@ def generate_random_purchase_data():
         append_random_etf(data, df)
     for i in range(3):
         append_random_crypto(data, df)
+    for i in range(2):
+        append_random_currency(data, df)
 
     return pd.DataFrame(data, columns=['ticker', 'amount', 'date', 'operation'])
 
@@ -108,6 +111,7 @@ def read_ticker_df_from_firestore() -> pd.DataFrame:
                 {'quotetype': 'EQUITY', 'name': 'AAPL', 'currency': 'USD'},
                 {'quotetype': 'ETF', 'name': 'SPY', 'currency': 'USD'},
                 {'quotetype': 'CRYPTOCURRENCY', 'name': 'BTC-USD', 'currency': 'USD'},
+                {'quotetype': 'CURRENCY', 'name': 'PLNUSD=X', 'currency': 'USD'},
             ]
         )
         write_dataframe_to_firestore(db, 'tickers', df)
@@ -189,6 +193,6 @@ def add_user_purchase_data_to_db(passphrase, data):
 def delete_user_purchase_data(passphrase, id_):
     hash_ = hash_passphrase(passphrase)
     db = get_firestore_client()
-    docs = db.collection(collection_name).where('hash', '==', hash_).where('id', '==', id_).stream()
+    docs = db.collection('purchases').where('hash', '==', hash_).where('id', '==', int(id_)).stream()
     for doc in docs:
-        doc.delete()
+        doc.reference.delete()

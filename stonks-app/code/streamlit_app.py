@@ -31,9 +31,6 @@ def handle_purchase_form(
         if ticker_info == {'regularMarketPrice': None, 'preMarketPrice': None, 'logo_url': ''}:
             purchase_form_error.error(f'ticker "{user_ticker}" does not exist')
             return
-        elif ticker_info['quoteType'] == 'CURRENCY':
-            purchase_form_error.error(f'ticker "{user_ticker}" is a currency')
-            return
         elif ticker_info['quoteType'] == 'MUTUALFUND':
             purchase_form_error.error(f'Mutual funds are not supported')
             return
@@ -125,7 +122,7 @@ if __name__ == '__main__':
     with st.sidebar.form('purchase-form'):
         st.caption(
             'Choose a ticker with yahoo finance format like AAPL/GOOG for equities,'
-            ' VWCE.DE/CSPX.L for ETFs, BTC-USD/DOGE-USD for cryptocurrencies.'
+            ' VWCE.DE/CSPX.L for ETFs, BTC-USD/DOGE-USD for cryptocurrencies, PLNUSD=X for fiat currencies.'
         )
         user_ticker = st.text_input('ticker name')
         user_amount = st.number_input('amount', min_value=0.0, step=0.0001, format="%.4f")
@@ -256,7 +253,7 @@ if __name__ == '__main__':
             st.plotly_chart(fig, use_container_width=True)
 
     # radio and slider widgets
-    frequency = st.radio("Historical net worth aggregation", ("Day","Week","Month"))
+    frequency = st.radio("Historical net worth aggregation", ("Day", "Week", "Month"))
     frequency = {'Day': 'D', 'Week': 'W', 'Month': 'M'}[frequency]
     max_value = (pd.Timestamp.now().to_period('M') - pd.Timestamp(earliest_date).to_period('M')).n + 1
     if max_value == 1:
