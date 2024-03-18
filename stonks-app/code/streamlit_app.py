@@ -57,30 +57,31 @@ def handle_purchase_form(
             purchase_form_error.error(f"can't sell before buying")
             return
 
-        date = pd.Timestamp(user_date)
-        bought_till_date = (
-            purchase_df
-            .query(f'ticker == "{user_ticker}"')
-            .assign(date=lambda x: pd.to_datetime(x.date))
-            .query(f'date <= "{str(date)}"')
-            .query(f'operation == "purchase"')
-            .amount
-            .sum()
-        )
-        sold_till_date = (
-            purchase_df
-            .query(f'ticker == "{user_ticker}"')
-            .assign(date=lambda x: pd.to_datetime(x.date))
-            .query(f'date <= "{str(date)}"')
-            .query(f'operation == "sale"')
-            .amount
-            .sum()
-        )
-        if user_amount > (bought_till_date - sold_till_date):
-            purchase_form_error.error(
-                f"can't sell more ({user_amount}) than purchased ({bought_till_date - sold_till_date})"
-            )
-            return
+        # TODO: handle stock splits
+        #date = pd.Timestamp(user_date)
+        #bought_till_date = (
+        #    purchase_df
+        #    .query(f'ticker == "{user_ticker}"')
+        #    .assign(date=lambda x: pd.to_datetime(x.date))
+        #    .query(f'date <= "{str(date)}"')
+        #    .query(f'operation == "purchase"')
+        #    .amount
+        #    .sum()
+        #)
+        #sold_till_date = (
+        #    purchase_df
+        #    .query(f'ticker == "{user_ticker}"')
+        #    .assign(date=lambda x: pd.to_datetime(x.date))
+        #    .query(f'date <= "{str(date)}"')
+        #    .query(f'operation == "sale"')
+        #    .amount
+        #    .sum()
+        #)
+        #if user_amount > (bought_till_date - sold_till_date):
+        #    purchase_form_error.error(
+        #        f"can't sell more ({user_amount}) than purchased ({bought_till_date - sold_till_date})"
+        #    )
+        #    return
 
     # add purchase
     data = {
