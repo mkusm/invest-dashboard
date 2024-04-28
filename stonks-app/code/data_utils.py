@@ -45,7 +45,7 @@ def correct_asset_amount_affected_by_split(df: pd.DataFrame, ticker_types: pd.Se
             if split == 0:
                 continue
             df.loc[
-                lambda x: (pd.to_datetime(x.date) <= date) & (x.ticker == ticker),
+                lambda x: (pd.to_datetime(x.date) <= date.tz_convert(None)) & (x.ticker == ticker),
                 'amount'
             ] *= split
     return df
