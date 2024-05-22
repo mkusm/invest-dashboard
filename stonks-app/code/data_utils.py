@@ -5,7 +5,11 @@ import yfinance as yf
 
 @st.experimental_memo(max_entries=1000, show_spinner=False)
 def get_asset_splits(ticker, cache_date):
-    return yf.Ticker(ticker).actions.loc[:, 'Stock Splits']
+    try:
+        return yf.Ticker(ticker).actions.loc[:, 'Stock Splits']
+    except Exception as e:
+        st.error(f'Error while fetching splits for {ticker}: {e}')
+        return pd.Series()
 
 
 @st.experimental_memo(max_entries=50, show_spinner=False)
