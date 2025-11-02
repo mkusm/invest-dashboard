@@ -3,7 +3,7 @@ import streamlit as st
 import yfinance as yf
 
 
-@st.experimental_memo(max_entries=1000, show_spinner=False)
+@st.cache_data(max_entries=1000, show_spinner=False)
 def get_asset_splits(ticker, cache_date):
     try:
         return yf.Ticker(ticker).actions.loc[:, 'Stock Splits']
@@ -12,7 +12,7 @@ def get_asset_splits(ticker, cache_date):
         return pd.Series()
 
 
-@st.experimental_memo(max_entries=50, show_spinner=False)
+@st.cache_data(max_entries=50, show_spinner=False)
 def get_historical_prices(tickers, start, cache_date):
     assert len(tickers) == len(set(tickers))
 

@@ -170,7 +170,7 @@ if __name__ == '__main__':
             purchase_df = purchase_df.drop(purchase_id).pipe(data_utils.reset_purchase_df_index)
             db.delete_user_purchase_data(cookies['passphrase'], id_)
             purchase_df = db.get_user_purchase_data_from_db(cookies['passphrase'])
-            st.experimental_rerun()
+            st.rerun()
 
     user_purchase_table.write(purchase_df.drop(columns=['id']))
 
@@ -182,7 +182,7 @@ if __name__ == '__main__':
 
         if submit_passphrase:
             cookies['passphrase'] = user_passphrase
-            st.experimental_rerun()
+            st.rerun()
 
     ## DASHBOARD ##
 
@@ -233,7 +233,7 @@ if __name__ == '__main__':
 
     if set(historical_prices.columns) != set(assets_names_with_currencies):
         # rare streamlit cache bug
-        st.experimental_rerun()
+        st.rerun()
     assets_df = assets_df.pipe(data_utils.add_latest_asset_prices, historical_prices)
     total_pie_figure = plot_utils.get_asset_pie_plot_fig(assets_df.groupby('type').sum().total_pln, 'Total net')
     type_pie_figures = [
